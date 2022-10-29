@@ -25,4 +25,12 @@ module.exports = {
     ],
     '@typescript-eslint/no-floating-promises': ['error'],
   },
+  overrides: [
+    {
+      files: ["*.test.ts"],
+      rules: {
+        "no-unused-expressions": "off",
+      },
+    },
+  ],
 };
