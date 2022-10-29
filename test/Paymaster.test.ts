@@ -204,6 +204,7 @@ describe('Paymaster', async function () {
   })
 
   describe('Sponsoring', function () {
+
     it('sponsor cannot be changed', async function () {
       const { greeter, provider, walletOne, paymaster } =
         await deploymentFixture()
@@ -266,6 +267,7 @@ describe('Paymaster', async function () {
       expect(await paymaster.getSponsor(greeter.address)).be.eq(
         '0x0000000000000000000000000000000000000000'
       )
+
     })
   })
 })
