@@ -4,8 +4,21 @@ import { WagmiConfig, createClient, configureChains, Chain } from 'wagmi'
 import { Box } from '@mui/material'
 import './App.scss'
 import 'react-notifications-component/dist/theme.css'
-import HelloWorld from './HelloWorls'
+import HelloWorld from './HelloWorld'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import Patron from './Patron'
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <Patron />,
+  },
+  {
+    path: '/greeter',
+    element: <HelloWorld />,
+  },
+])
 
 const zkSyncChain: Chain = {
   id: 280,
@@ -39,7 +52,7 @@ function App() {
   return (
     <WagmiConfig client={client}>
       <Box className="App">ZKSync Onboarding Station Dapp</Box>
-      <HelloWorld />
+      <RouterProvider router={router} />
     </WagmiConfig>
   )
 }
