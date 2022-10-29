@@ -5,6 +5,7 @@ import App from "./App";
 import {Web3ReactProvider} from '@web3-react/core';
 import reportWebVitals from "./reportWebVitals";
 import { Web3Provider } from "@ethersproject/providers";
+import Patron from "./patron/Patron";
 
 function getLibrary(provider: any): Web3Provider {
   const library = new Web3Provider(provider);
