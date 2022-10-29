@@ -1,40 +1,39 @@
 import React, { useEffect } from 'react'
-import { WagmiConfig, createClient } from 'wagmi'
-import { BigNumber, getDefaultProvider, utils } from 'ethers'
+import { WagmiConfig, createClient, configureChains, Chain } from 'wagmi'
+// import {  } from 'zksync-web3'
 import { Box } from '@mui/material'
 import './App.scss'
-import { Store } from 'react-notifications-component'
 import 'react-notifications-component/dist/theme.css'
 import HelloWorld from './HelloWorls'
+import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 
-function bnStrToNumber(bnStr: string): number {
-  return BigNumber.from(bnStr).toNumber()
-}
+const zkSyncChain: Chain = {
+  id: 280,
+  name: 'zkSync Testnet',
+  network: 'zkSync Testnet',
 
-function formatEther(bignum: BigNumber | null): string | null {
-  return bignum && Number(utils.formatEther(bignum)).toFixed(2)
-}
-
-function notify(title: string, message: string, type: 'success' | 'danger') {
-  Store.addNotification({
-    title,
-    message,
-    type,
-    insert: 'top',
-    container: 'top-center',
-    animationIn: ['animated', 'fadeIn'],
-    animationOut: ['animated', 'fadeOut'],
-    dismiss: {
-      duration: 3000,
-      onScreen: true,
-    },
-  })
+  /** Collection of RPC endpoints */
+  rpcUrls: {
+    default: 'https://zksync2-testnet.zksync.dev',
+  },
+  testnet: true,
 }
 
 function App() {
+  const { provider } = configureChains(
+    [zkSyncChain],
+    [
+      jsonRpcProvider({
+        rpc: (chain) => ({
+          http: zkSyncChain.rpcUrls.default,
+        }),
+      }),
+    ]
+  )
+
   const client = createClient({
     autoConnect: true,
-    provider: getDefaultProvider(),
+    provider,
   })
 
   return (
