@@ -10,6 +10,17 @@ require("@matterlabs/hardhat-zksync-solc");
 
 type NetworkName = string;
 
+const zkSyncDeploy =
+  process.env.NODE_ENV === "test"
+    ? {
+        zkSyncNetwork: "http://localhost:3050",
+        ethNetwork: "http://localhost:8545",
+      }
+    : {
+        zkSyncNetwork: "https://zksync2-testnet.zksync.dev",
+        ethNetwork: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      };
+
 const INFURA_ENDPOINTS: { [name: string]: string } = {
   mainnet: "https://mainnet.infura.io/v3/",
   rinkeby: "https://rinkeby.infura.io/v3/",
@@ -96,11 +107,7 @@ module.exports = {
       },
     },
   },
-  zkSyncDeploy: {
-    zkSyncNetwork: "https://zksync2-testnet.zksync.dev",
-    // ethNetwork: "goerli", // Can also be the RPC URL of the network (e.g. `https://goerli.infura.io/v3/<API_KEY>`)
-    ethNetwork: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
-  },
+  zkSyncDeploy,
   networks: {
     hardhat: {
       zksync: true,
