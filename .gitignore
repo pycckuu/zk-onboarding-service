@@ -7,7 +7,9 @@ typechain-types
 
 #Hardhat files
 artifacts
+artifacts-zk
 cache
+cache-zk
 
 .DS_Store
 

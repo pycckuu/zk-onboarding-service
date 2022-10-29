@@ -1,47 +1,34 @@
-import * as dotenv from "dotenv";
+import { config as dotenvConfig } from "dotenv";
+dotenvConfig();
 
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
+require("@matterlabs/hardhat-zksync-deploy");
+require("@matterlabs/hardhat-zksync-solc");
 
-dotenv.config();
-
-// Dear Student,
-//
-// This hardhat.config.ts file differs from the Hardhat project boilerplate generated
-// when you run `npx hardhat` in a new directory. We suggest you add these same lines
-// of code to your future projects, in order to easily setup:
-// - environment variables via `dotenv` (you'll need to `mv .env.example .env`)
-// - Etherscan source verification
-//
-// Love,
-// Macro Instruction Team
-
-const config: HardhatUserConfig = {
-  solidity: {
-    version: "0.8.17",
+module.exports = {
+  zksolc: {
+    version: "1.2.0",
+    compilerSource: "binary",
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+      },
+      experimental: {
+        dockerImage: "matterlabs/zksolc",
+        tag: "v1.2.0",
       },
     },
+  },
+  zkSyncDeploy: {
+    zkSyncNetwork: "https://zksync2-testnet.zksync.dev",
+    // ethNetwork: "goerli", // Can also be the RPC URL of the network (e.g. `https://goerli.infura.io/v3/<API_KEY>`)
+    ethNetwork: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
   },
   networks: {
-    goerli: {
-      url: process.env.GOERLI_URL || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
-    },
     hardhat: {
-      accounts: {
-        count: 20,
-        accountsBalance: "10000000000000000000000", // 10ETH (Default)
-      },
+      zksync: true,
     },
   },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
+  solidity: {
+    version: "0.8.16",
   },
 };
-
-export default config;
