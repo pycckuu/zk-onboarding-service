@@ -1,9 +1,9 @@
-import { config as dotenvConfig } from "dotenv";
 import { utils, Wallet } from "zksync-web3";
 // import * as ethers from "ethers";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 
+import { config as dotenvConfig } from "dotenv";
 dotenvConfig();
 
 // An example of a deploy script that will deploy and call a simple contract.
@@ -38,7 +38,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
 
   // Call the deployed contract.
   const greetingFromContract = await greeterContract.greet();
-  if (greetingFromContract == greeting) {
+  if (greetingFromContract === greeting) {
     console.log(`Contract greets us with ${greeting}!`);
   } else {
     console.error(
@@ -52,7 +52,7 @@ export default async function (hre: HardhatRuntimeEnvironment) {
   await setNewGreetingHandle.wait();
 
   const newGreetingFromContract = await greeterContract.greet();
-  if (newGreetingFromContract == newGreeting) {
+  if (newGreetingFromContract === newGreeting) {
     console.log(`Contract greets us with ${newGreeting}!`);
   } else {
     console.error(
