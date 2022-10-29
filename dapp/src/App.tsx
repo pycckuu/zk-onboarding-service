@@ -7,7 +7,7 @@ import 'react-notifications-component/dist/theme.css'
 import HelloWorld from './HelloWorld'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import Patron from './Patron'
+import Patron from './patron/Patron'
 
 const router = createBrowserRouter([
   {
