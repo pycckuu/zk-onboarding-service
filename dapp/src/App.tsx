@@ -5,6 +5,7 @@ import { Box } from '@mui/material'
 import './App.scss'
 import 'react-notifications-component/dist/theme.css'
 import HelloWorld from './HelloWorld'
+import Station from './Station'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Patron from './patron/Patron'
@@ -17,6 +18,10 @@ const router = createBrowserRouter([
   {
     path: '/greeter',
     element: <HelloWorld />,
+  },
+  {
+    path: '/station',
+    element: <Station />,
   },
 ])
 
