@@ -13,7 +13,7 @@ const injected = new InjectedConnector({
   supportedChainIds: [280],
 })
 
-const PAYMASTER_ADDRESS = '0x226523D0b578448991D1531024D3F61C314fc253'
+const PAYMASTER_ADDRESS = '0x7937A6bff6a4a519E7c2Db751c120636dc97826d'
 
 const ABI = [
   {
