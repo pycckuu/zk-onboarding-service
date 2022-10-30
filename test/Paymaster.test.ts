@@ -47,7 +47,6 @@ async function deploymentFixture() {
       ergsPerPubdata: utils.DEFAULT_ERGS_PER_PUBDATA_LIMIT,
       paymasterParams: {
         paymaster: paymaster.address,
-        // empty input as our paymaster doesn't require additional data
         paymasterInput: '0x',
       },
     },
