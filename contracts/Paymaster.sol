@@ -20,11 +20,7 @@ contract Paymaster is IPaymaster {
     mapping(address => mapping(address => uint256)) public txCount;
 
     // mapping of the sponsored funds to the sponsored address
-<<<<<<< HEAD
     // mapping(address => uint256) public sponsoredFunds;
-=======
-    mapping(address => uint256) public sponsoredFunds;
->>>>>>> paymaster: WIP
 
     modifier onlyBootloader() {
         require(
@@ -55,14 +51,6 @@ contract Paymaster is IPaymaster {
             'Paymaster: The standard paymaster input must be at least 4 bytes long'
         );
 
-<<<<<<< HEAD
-=======
-        uint256 requiredETH = _transaction.ergsLimit *
-            _transaction.maxFeePerErg;
-
-        sponsoredFunds[sponsors[_uintToAddr(_transaction.to)]] -= requiredETH;
->>>>>>> paymaster: WIP
-
         bytes4 paymasterInputSelector = bytes4(
             _transaction.paymasterInput[0:4]
         );
@@ -71,7 +59,7 @@ contract Paymaster is IPaymaster {
             // neither paymaster nor account are allowed to access this context variable.
 
             uint256 requiredETH = _transaction.ergsLimit *
-                        _transaction.maxFeePerErg;
+                _transaction.maxFeePerErg;
             // The bootloader never returns any data, so it can safely be ignored here.
             (bool success, ) = payable(BOOTLOADER_FORMAL_ADDRESS).call{
                 value: requiredETH
@@ -96,7 +84,6 @@ contract Paymaster is IPaymaster {
         return txCount[_spnosorredAddr][msg.sender];
     }
 
-<<<<<<< HEAD
     function getSponsor(address _spnosorredAddr)
         external
         view
@@ -105,8 +92,6 @@ contract Paymaster is IPaymaster {
         return sponsors[_spnosorredAddr];
     }
 
-=======
->>>>>>> paymaster: WIP
     function sponsorTheAddress(address _addr, uint256 _n) external payable {
         require(
             nFirstTx[_addr] == 0 || sponsors[_addr] == msg.sender,
@@ -120,11 +105,7 @@ contract Paymaster is IPaymaster {
 
         nFirstTx[_addr] = _n;
         sponsors[_addr] = msg.sender;
-<<<<<<< HEAD
         // sponsoredFunds[_addr] += msg.value;
-=======
-        sponsoredFunds[_addr] += msg.value;
->>>>>>> paymaster: WIP
     }
 
     function stopSponsorship(address _addr) external {
@@ -135,7 +116,6 @@ contract Paymaster is IPaymaster {
 
         nFirstTx[_addr] = 0;
         sponsors[_addr] = address(0);
-<<<<<<< HEAD
         // uint256 refund = sponsoredFunds[_addr];
         // sponsoredFunds[_addr] = 0;
 
@@ -145,17 +125,6 @@ contract Paymaster is IPaymaster {
         //     success,
         //     'Paymaster: Failed to transfer remaining funds to the sponsor'
         // );
-=======
-        uint256 refund = sponsoredFunds[_addr];
-        sponsoredFunds[_addr] = 0;
-
-        (bool success, ) = payable(address(msg.sender)).call{value: refund}('');
-
-        require(
-            success,
-            'Paymaster: Failed to transfer remaining funds to the sponsor'
-        );
->>>>>>> paymaster: WIP
     }
 
     function _addrToUint256(address a) internal pure returns (uint256) {
