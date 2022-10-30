@@ -6,6 +6,7 @@ import './App.scss'
 import 'react-notifications-component/dist/theme.css'
 import HelloWorld from './HelloWorld'
 import Station from './Station'
+import Greeter from './Greeter'
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Patron from './patron/Patron'
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
   {
     path: '/station',
     element: <Station />,
+  },
+  {
+    path: '/greeter_alt',
+    element: <Greeter />,
   },
 ])
 

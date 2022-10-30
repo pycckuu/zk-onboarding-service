@@ -1,7 +1,8 @@
 import React, { useEffect, useCallback } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import background from './images/background.jpg'
-import { BigNumber, constants, Contract, utils } from 'ethers'
+import { BigNumber, constants, utils as eUtils } from 'ethers'
+import { Contract, Wallet, Provider, utils } from 'zksync-web3'
 import { Button, Box, Input } from '@mui/material'
 import { InjectedConnector } from '@web3-react/injected-connector'
 import './App.scss'
@@ -14,24 +15,55 @@ const injected = new InjectedConnector({
 })
 
 const PAYMASTER_ADDRESS = '0xfE56376d7b95A436273BE222aD0b7f457e5f80A1'
+const GREETER_ADDRESS = '0xD65E24C936D6649b4Adbe9b66a2E0c48258aa6d3'
 
-const ABI = [
+const PAYMASTER_ABI = [
   {
     inputs: [
       {
         internalType: 'address',
-        name: '_addr',
+        name: '_spnosorredAddr',
         type: 'address',
       },
+    ],
+    name: 'getMyCount',
+    outputs: [
       {
         internalType: 'uint256',
-        name: '_n',
+        name: '',
         type: 'uint256',
       },
     ],
-    name: 'sponsorTheAddress',
+    stateMutability: 'view',
+    type: 'function',
+  },
+]
+
+const GREETER_ABI = [
+  {
+    inputs: [],
+    name: 'greet',
+    outputs: [
+      {
+        internalType: 'string',
+        name: '',
+        type: 'string',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'string',
+        name: '_greeting',
+        type: 'string',
+      },
+    ],
+    name: 'setGreeting',
     outputs: [],
-    stateMutability: 'payable',
+    stateMutability: 'nonpayable',
     type: 'function',
   },
 ]
@@ -41,7 +73,7 @@ function bnStrToNumber(bnStr: string): number {
 }
 
 function formatEther(bignum: BigNumber | null): string | null {
-  return bignum && Number(utils.formatEther(bignum)).toFixed(2)
+  return bignum && Number(eUtils.formatEther(bignum)).toFixed(2)
 }
 
 function notify(title: string, message: string, type: 'success' | 'danger') {
@@ -60,19 +92,20 @@ function notify(title: string, message: string, type: 'success' | 'danger') {
   })
 }
 
-function Station() {
+function Greeter() {
   const { active, account, library, connector, activate } = useWeb3React()
 
-  const [input, setInput] = React.useState<number | undefined>(undefined)
-  const [nInput, setNInput] = React.useState<number | undefined>(undefined)
+  const [txCount, setTxCount] = React.useState<number | undefined>(undefined)
   const [addressInput, setAddressInput] = React.useState<string | undefined>(
     undefined
   )
   const [balanceEth, setBalanceEth] = React.useState<BigNumber>(constants.Zero)
-  const [paymasterBalance, setPaymasterBalance] = React.useState<BigNumber>(
-    constants.Zero
-  )
   const [contract, setContract] = React.useState<Contract | null>(null)
+  const [greeterContract, setGreeterContract] = React.useState<Contract | null>(
+    null
+  )
+
+  const [greeting, setGreeting] = React.useState<string | null>(null)
 
   async function connect() {
     try {
@@ -85,19 +118,27 @@ function Station() {
 
   // async function getBalance() {
   const getBalance = useCallback(async () => {
-    console.debug('account', account)
-    const balance = await library?.getBalance(account || '')
-    console.debug('balance', balance)
+    const balance = await library.getBalance(account)
     setBalanceEth(balance || constants.Zero)
     const c = new Contract(
       PAYMASTER_ADDRESS,
-      ABI,
+      PAYMASTER_ABI,
       library?.getSigner()
     ) as Contract
     setContract(c)
 
-    const pBalance = await library?.getBalance(PAYMASTER_ADDRESS)
-    setPaymasterBalance(pBalance || constants.Zero)
+    const greeter = new Contract(
+      GREETER_ADDRESS,
+      GREETER_ABI,
+      library?.getSigner()
+    ) as Contract
+    setGreeterContract(greeter)
+
+    const greeting = await greeter.greet()
+    setGreeting(greeting)
+
+    const txCount = await c.getMyCount(account)
+    setTxCount(bnStrToNumber(txCount))
   }, [account, library])
 
   useEffect(() => {
@@ -109,19 +150,48 @@ function Station() {
   }, [active, account, library, connector, getBalance])
 
   const onClick = async () => {
+    if (!greeterContract) {
+      return
+    }
+
     if (!contract) {
       return
     }
 
-    if (!input || input === 0) {
-      notify('Error', 'Please enter a valid amount', 'danger')
-      return
-    }
-
     try {
-      const tx = await contract.sponsorTheAddress(addressInput, nInput, {
-        value: utils.parseEther(input.toString()),
+      const gasPrice = await library.getGasPrice()
+      console.debug('gasPrice', gasPrice.toString())
+      const gasLimit = await greeterContract.estimateGas.setGreeting(greeting, {
+        customData: {
+          ergsPerPubdata: utils.DEFAULT_ERGS_PER_PUBDATA_LIMIT,
+          paymasterParams: {
+            paymaster: contract.address,
+            paymasterInput: '0x',
+          },
+        },
       })
+
+      console.debug('gasLimit', gasLimit.toString())
+
+      const paymasterParams = utils.getPaymasterParams(contract.address, {
+        type: 'General',
+        innerInput: '0x',
+      })
+
+      const txParams = {
+        // Provide gas params manually
+        maxFeePerGas: gasPrice,
+        maxPriorityFeePerGas: constants.Zero,
+        gasLimit,
+
+        // paymaster info
+        customData: {
+          ergsPerPubdata: utils.DEFAULT_ERGS_PER_PUBDATA_LIMIT,
+          paymasterParams,
+        },
+      }
+
+      const tx = await greeterContract.setGreeting(greeting, txParams)
       await tx.wait()
       console.debug('tx', tx.hash)
       notify(
@@ -134,14 +204,6 @@ function Station() {
       console.debug(ex)
       notify('Oops!', 'Something went wrong. ' + ex.message, 'danger')
     }
-  }
-
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(Number(e.target.value))
-  }
-
-  const handleNInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNInput(Number(e.target.value))
   }
 
   const handleAddressInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,18 +220,22 @@ function Station() {
         }}
       >
         <Box className="content">
-          <Box className={'title'}>ZKSync Onboarding Station Dapp</Box>
+          <Box className={'title'}>Greeter Dapp</Box>
           <Box className="stats">
             <Box className={'stat'}>
-              <Box className={'stat-title'}>Paymaster Balance</Box>
-              <Box className={'stat-value'}>
-                {formatEther(paymasterBalance)} ETH
-              </Box>
+              <Box className={'stat-title'}>Greeting</Box>
+              <Box className={'stat-value'}>{greeting}</Box>
             </Box>
             <Box className={'stat'}>
               <Box className={'stat-title'}>Your Balance</Box>
               <Box className={'stat-value'}>
                 <span>{formatEther(balanceEth)} ETH</span>
+              </Box>
+            </Box>
+            <Box className={'stat'}>
+              <Box className={'stat-title'}>My TX Count</Box>
+              <Box className={'stat-value'}>
+                <span>{txCount}</span>
               </Box>
             </Box>
           </Box>
@@ -179,21 +245,7 @@ function Station() {
               className={'input'}
               value={addressInput}
               onChange={handleAddressInput}
-              placeholder={'Enter address'}
-            />
-            <Input
-              className={'input'}
-              type="number"
-              value={nInput}
-              onChange={handleNInput}
-              placeholder={'Enter N'}
-            />
-            <Input
-              className={'input'}
-              type="number"
-              value={input}
-              onChange={handleInput}
-              placeholder={'Enter ETH'}
+              placeholder={'Enter Greeting'}
             />
             {active ? (
               <Button
@@ -202,7 +254,7 @@ function Station() {
                 className="button"
                 onClick={onClick}
               >
-                FUND
+                SET GREETING
               </Button>
             ) : (
               <Button
@@ -221,4 +273,4 @@ function Station() {
   )
 }
 
-export default Station
+export default Greeter
