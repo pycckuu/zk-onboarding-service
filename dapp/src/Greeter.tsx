@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import background from './images/background.jpg'
 import { BigNumber, constants, utils as eUtils } from 'ethers'
-import { Contract, Wallet, Provider, utils } from 'zksync-web3'
+import { Contract, Web3Provider, Provider, utils } from 'zksync-web3'
 import { Button, Box, Input } from '@mui/material'
 import { InjectedConnector } from '@web3-react/injected-connector'
 import './App.scss'
@@ -14,8 +14,8 @@ const injected = new InjectedConnector({
   supportedChainIds: [280],
 })
 
-const PAYMASTER_ADDRESS = '0xfE56376d7b95A436273BE222aD0b7f457e5f80A1'
-const GREETER_ADDRESS = '0xD65E24C936D6649b4Adbe9b66a2E0c48258aa6d3'
+const PAYMASTER_ADDRESS = '0x094B328Ab352240055D7032E58D454504E59cd74'
+const GREETER_ADDRESS = '0xa6FB3CA37B0238FBea536947738D4B3C26f362FF'
 
 const PAYMASTER_ABI = [
   {
@@ -27,6 +27,25 @@ const PAYMASTER_ABI = [
       },
     ],
     name: 'getMyCount',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '_spnosorredAddr',
+        type: 'address',
+      },
+    ],
+    name: 'getNFirst',
     outputs: [
       {
         internalType: 'uint256',
@@ -95,10 +114,7 @@ function notify(title: string, message: string, type: 'success' | 'danger') {
 function Greeter() {
   const { active, account, library, connector, activate } = useWeb3React()
 
-  const [txCount, setTxCount] = React.useState<number | undefined>(undefined)
-  const [addressInput, setAddressInput] = React.useState<string | undefined>(
-    undefined
-  )
+  const [txCount, setTxCount] = React.useState<number>(0)
   const [balanceEth, setBalanceEth] = React.useState<BigNumber>(constants.Zero)
   const [contract, setContract] = React.useState<Contract | null>(null)
   const [greeterContract, setGreeterContract] = React.useState<Contract | null>(
@@ -106,6 +122,9 @@ function Greeter() {
   )
 
   const [greeting, setGreeting] = React.useState<string | null>(null)
+  const [greetingInContract, setGreetingInContrat] = React.useState<
+    string | null
+  >(null)
 
   async function connect() {
     try {
@@ -118,27 +137,24 @@ function Greeter() {
 
   // async function getBalance() {
   const getBalance = useCallback(async () => {
+    const provider = new Provider('https://zksync2-testnet.zksync.dev')
+    const signer = new Web3Provider(window.ethereum).getSigner()
+
     const balance = await library.getBalance(account)
     setBalanceEth(balance || constants.Zero)
-    const c = new Contract(
-      PAYMASTER_ADDRESS,
-      PAYMASTER_ABI,
-      library?.getSigner()
-    ) as Contract
+
+    const c = new Contract(PAYMASTER_ADDRESS, PAYMASTER_ABI, signer) as Contract
     setContract(c)
 
-    const greeter = new Contract(
-      GREETER_ADDRESS,
-      GREETER_ABI,
-      library?.getSigner()
-    ) as Contract
-    setGreeterContract(greeter)
-
-    const greeting = await greeter.greet()
-    setGreeting(greeting)
-
-    const txCount = await c.getMyCount(account)
+    console.debug('paymaster contract', c)
+    const txCount = await c.getMyCount(GREETER_ADDRESS)
+    console.debug('txCount:', txCount)
     setTxCount(bnStrToNumber(txCount))
+
+    const greeter = new Contract(GREETER_ADDRESS, GREETER_ABI, signer)
+    setGreeterContract(greeter)
+    const greeting = await greeter.greet()
+    setGreetingInContrat(greeting)
   }, [account, library])
 
   useEffect(() => {
@@ -191,23 +207,37 @@ function Greeter() {
         },
       }
 
-      const tx = await greeterContract.setGreeting(greeting, txParams)
-      await tx.wait()
-      console.debug('tx', tx.hash)
+      let tx;
+      const nFirst = await contract.getNFirst(GREETER_ADDRESS)
+      if (nFirst <= txCount) {
+        tx = await greeterContract.setGreeting(greeting)
+        await tx.wait()
+        console.debug('tx', tx.hash)
+        getBalance()
+      } else {
+        tx = await greeterContract.setGreeting(greeting, txParams)
+        await tx.wait()
+        console.debug('tx', tx.hash)
+      }
+
       notify(
         'Bravo!',
         'You just sent us your moneyz!! Hash: ' + tx.hash,
         'success'
       )
       getBalance()
+      // setTxCount(txCount + 1)
     } catch (ex: any) {
-      console.debug(ex)
-      notify('Oops!', 'Something went wrong. ' + ex.message, 'danger')
+      try {
+      } catch (error) {
+        console.debug(ex)
+        notify('Oops!', 'You have insufficient funds' + ex.message, 'danger')
+      }
     }
   }
 
   const handleAddressInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAddressInput(e.target.value)
+    setGreeting(e.target.value)
   }
 
   return (
@@ -224,7 +254,7 @@ function Greeter() {
           <Box className="stats">
             <Box className={'stat'}>
               <Box className={'stat-title'}>Greeting</Box>
-              <Box className={'stat-value'}>{greeting}</Box>
+              <Box className={'stat-value'}>{greetingInContract}</Box>
             </Box>
             <Box className={'stat'}>
               <Box className={'stat-title'}>Your Balance</Box>
@@ -243,7 +273,7 @@ function Greeter() {
           <Box className="contribution">
             <Input
               className={'input'}
-              value={addressInput}
+              value={greeting}
               onChange={handleAddressInput}
               placeholder={'Enter Greeting'}
             />

@@ -84,6 +84,14 @@ contract Paymaster is IPaymaster {
         return txCount[_spnosorredAddr][msg.sender];
     }
 
+    function getNFirst(address _spnosorredAddr)
+        external
+        view
+        returns (uint256)
+    {
+        return nFirstTx[_spnosorredAddr];
+    }
+
     function getSponsor(address _spnosorredAddr)
         external
         view
