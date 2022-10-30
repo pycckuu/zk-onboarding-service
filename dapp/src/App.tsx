@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react'
 import { WagmiConfig, createClient, configureChains, Chain } from 'wagmi'
 // import {  } from 'zksync-web3'
-import { Box } from '@mui/material'
 import './App.scss'
 import 'react-notifications-component/dist/theme.css'
 import HelloWorld from './HelloWorld'
@@ -51,7 +50,6 @@ function App() {
 
   return (
     <WagmiConfig client={client}>
-      <Box className="App">ZKSync Onboarding Station Dapp</Box>
       <RouterProvider router={router} />
     </WagmiConfig>
   )
