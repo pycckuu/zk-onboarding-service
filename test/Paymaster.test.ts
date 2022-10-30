@@ -230,7 +230,7 @@ describe('Paymaster', async function () {
       }
     })
 
-    it('sponsor stop sponsorship and withdraw funds', async function () {
+    it.only('sponsor stop sponsorship and withdraw funds', async function () {
       const { greeter, emptyWallet, walletOne, paymaster, txParams, provider } =
         await deploymentFixture()
 
