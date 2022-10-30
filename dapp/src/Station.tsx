@@ -73,6 +73,12 @@ function Station() {
     constants.Zero
   )
   const [contract, setContract] = React.useState<Contract | null>(null)
+  // UI elements
+  const [tab, setTab] = React.useState<'n-free' | 'coupons'>('n-free')
+
+  const switchTab = (tab: 'n-free' | 'coupons') => {
+    setTab(tab)
+  }
 
   async function connect() {
     try {
@@ -158,7 +164,7 @@ function Station() {
         }}
       >
         <Box className="content">
-          <Box className={'title'}>ZKSync Onboarding Station Dapp</Box>
+          <Box className={'title'}>ZKSync Patron Dapp</Box>
           <Box className="stats">
             <Box className={'stat'}>
               <Box className={'stat-title'}>Paymaster Balance</Box>
@@ -173,48 +179,116 @@ function Station() {
               </Box>
             </Box>
           </Box>
-          <Box className="stats"></Box>
-          <Box className="contribution">
-            <Input
-              className={'input'}
-              value={addressInput}
-              onChange={handleAddressInput}
-              placeholder={'Enter address'}
-            />
-            <Input
-              className={'input'}
-              type="number"
-              value={nInput}
-              onChange={handleNInput}
-              placeholder={'Enter N'}
-            />
-            <Input
-              className={'input'}
-              type="number"
-              value={input}
-              onChange={handleInput}
-              placeholder={'Enter ETH'}
-            />
-            {active ? (
+
+          <Box className={'title'}>Pick your free strategy</Box>
+
+          <Box className="control-tabs">
+            <Box className="tabs">
               <Button
-                variant="contained"
+                variant={tab === 'n-free' ? 'contained' : 'outlined'}
                 component="label"
-                className="button"
-                onClick={onClick}
+                className="button-tab"
+                onClick={() => switchTab('n-free')}
               >
-                FUND
+                Free first N transactions
               </Button>
-            ) : (
               <Button
-                variant="contained"
+                variant={tab === 'coupons' ? 'contained' : 'outlined'}
                 component="label"
-                className="button"
-                onClick={connect}
+                className="button-tab"
+                onClick={() => switchTab('coupons')}
               >
-                Connect
+                Free Coupons
               </Button>
-            )}
+            </Box>
           </Box>
+
+          {tab === 'n-free' && (
+            <Box className="contribution">
+              <Input
+                className={'input'}
+                value={addressInput}
+                onChange={handleAddressInput}
+                placeholder={'Enter address'}
+              />
+              <Input
+                className={'input'}
+                type="number"
+                value={nInput}
+                onChange={handleNInput}
+                placeholder={'Enter N'}
+              />
+              <Input
+                className={'input'}
+                type="number"
+                value={input}
+                onChange={handleInput}
+                placeholder={'Enter ETH'}
+              />
+              {active ? (
+                <Button
+                  variant="contained"
+                  component="label"
+                  className="button"
+                  onClick={onClick}
+                >
+                  FUND
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  component="label"
+                  className="button"
+                  onClick={connect}
+                >
+                  Connect
+                </Button>
+              )}
+            </Box>
+          )}
+
+          {tab === 'coupons' && (
+            <Box className="contribution">
+              <Input
+                className={'input'}
+                value={addressInput}
+                onChange={handleAddressInput}
+                placeholder={'Enter address'}
+              />
+              <Input
+                className={'input'}
+                value={nInput}
+                onChange={handleNInput}
+                placeholder={'Enter Coupons'}
+              />
+              <Input
+                className={'input'}
+                type="number"
+                value={input}
+                onChange={handleInput}
+                placeholder={'Enter ETH'}
+              />
+              {active ? (
+                <Button
+                  variant="contained"
+                  component="label"
+                  className="button"
+                  onClick={onClick}
+                >
+                  FUND
+                </Button>
+              ) : (
+                <Button
+                  variant="contained"
+                  component="label"
+                  className="button"
+                  onClick={connect}
+                >
+                  Connect
+                </Button>
+              )}
+            </Box>
+          )}
         </Box>
       </Box>
     </Box>
